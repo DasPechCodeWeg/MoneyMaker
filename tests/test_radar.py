@@ -20,6 +20,7 @@ CONFIG = {
     "trusted_sponsors": {"tscircuit": {"evidence": "https://algora.io/tscircuit/bounties"}},
     "blocked_owners": ["claude-builders-bounty"],
     "max_issue_age_days": 730,
+    "minimum_score": 35,
     "results_per_query": 10,
     "max_candidates": 10,
 }
@@ -157,6 +158,11 @@ class RadarTests(unittest.TestCase):
         opportunities, errors = scan(FakeClient(make_issue(), fail=True), CONFIG, now=NOW, pause=lambda _: None)
         self.assertEqual(len(opportunities), 1)
         self.assertEqual(len(errors), 1)
+
+    def test_scan_excludes_zero_score_distractions(self) -> None:
+        crowded = make_issue(comments=200, created_at="2025-01-01T00:00:00Z")
+        opportunities, _ = scan(FakeClient(crowded), CONFIG, now=NOW, pause=lambda _: None)
+        self.assertFalse(opportunities)
 
     def test_markdown_never_represents_advertisement_as_guarantee(self) -> None:
         opportunity = assess(make_issue(), make_repository(), CONFIG, now=NOW)
