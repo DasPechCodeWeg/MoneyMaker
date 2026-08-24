@@ -31,6 +31,17 @@ UNACCEPTABLE_PATTERNS = (
      "Maintainer asks contributors not to open new pull requests."),
     (re.compile(r"\b(?:no|do not use|must not use)\s+(?:generative\s+)?(?:ai|llms?)\b", re.I),
      "The issue appears to prohibit AI-assisted work."),
+    (re.compile(
+        r"\b(?:bount(?:y|ies)\s+(?:is|are)\s+symbolic|no\s+monetary\s+(?:value|reward)|"
+        r"not\s+(?:a\s+)?real[- ]world\s+payout|will\s+never\s+be\s+merged|"
+        r"do\s+not\s+expect[\s\S]{0,80}(?:pay|money|merge))\b",
+        re.I,
+    ), "The repository explicitly disclaims real payment or merging."),
+    (re.compile(
+        r"<!--[\s\S]{0,1500}\b(?:ignore\s+(?:all\s+)?(?:previous|prior)\s+instructions|"
+        r"system\s+prompt|environment\s+variables?|session\s+data|exfiltrat|leak\s+secrets?)\b[\s\S]{0,1500}-->",
+        re.I,
+    ), "A hidden HTML comment contains instructions aimed at automated agents."),
 )
 
 
