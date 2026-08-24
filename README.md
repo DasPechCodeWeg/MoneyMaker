@@ -25,6 +25,15 @@ GITHUB_TOKEN=github_token_here python -m moneymaker.radar
 
 Outputs are written to `reports/bounties.json` and `reports/BOUNTIES.md`.
 
+Check one advertised issue before spending time on it:
+
+```bash
+python -m bountyproof check https://github.com/OWNER/REPO/issues/NUMBER \
+  --amount 100 --platform algora --claims 3 --escrow-status unknown
+```
+
+This returns `PASS`, `CAUTION`, or `REJECT` with the evidence behind every rule.
+
 ## Current strategy
 
 The repository supports three routes:
@@ -42,4 +51,3 @@ MoneyMaker does not mass-submit generated pull requests, make speculative vulner
 ## License
 
 MIT
-
