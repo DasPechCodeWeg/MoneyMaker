@@ -1,0 +1,34 @@
+{
+  "queries": [
+    "is:issue is:open archived:false org:tscircuit label:\"💎 Bounty\"",
+    "is:issue is:open archived:false org:projectdiscovery label:bounty",
+    "is:issue is:open archived:false org:remotion-dev label:bounty",
+    "is:issue is:open archived:false user:seveibar \"/bounty $\" in:body",
+    "is:issue is:open archived:false label:bounty no:assignee \"$\" in:body"
+  ],
+  "trusted_sponsors": {
+    "tscircuit": {
+      "reason": "Algora records 707 completed bounties and named earners.",
+      "evidence": "https://algora.io/tscircuit/bounties?status=completed"
+    },
+    "seveibar": {
+      "reason": "Founder and maintainer associated with the tscircuit bounty program.",
+      "evidence": "https://algora.io/tscircuit/bounties"
+    },
+    "projectdiscovery": {
+      "reason": "Published official contributor bounty terms and payout workflow.",
+      "evidence": "https://github.com/projectdiscovery/oss-bounty-program"
+    },
+    "remotion-dev": {
+      "reason": "Algora profiles identify multiple completed Remotion rewards.",
+      "evidence": "https://algora.io/hunxjunedo"
+    }
+  },
+  "blocked_owners": [
+    "claude-builders-bounty"
+  ],
+  "max_issue_age_days": 730,
+  "results_per_query": 20,
+  "max_candidates": 30
+}
+
