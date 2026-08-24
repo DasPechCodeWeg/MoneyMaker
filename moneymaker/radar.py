@@ -48,6 +48,7 @@ class Opportunity:
     amount_source: str
     age_days: int
     comments: int
+    competing_pull_requests: int
     score: int
     sponsor: str
     sponsor_evidence: str | None
@@ -67,6 +68,7 @@ class GitHubClient:
     def __init__(self, token: str | None = None) -> None:
         self.token = token
         self._repository_cache: dict[str, dict[str, Any]] = {}
+        self._pull_request_cache: dict[str, list[dict[str, Any]]] = {}
 
     def get(self, route: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
         query = "?" + urllib.parse.urlencode(params) if params else ""
@@ -105,6 +107,48 @@ class GitHubClient:
         if repository not in self._repository_cache:
             self._repository_cache[repository] = self.get(f"/repos/{repository}")
         return self._repository_cache[repository]
+
+    def open_pull_requests(self, repository: str) -> list[dict[str, Any]]:
+        """Fetch up to 100 open PRs without consuming the search API quota."""
+        if repository in self._pull_request_cache:
+            return self._pull_request_cache[repository]
+        route = f"/repos/{repository}/pulls?state=open&per_page=100"
+        request = urllib.request.Request(
+            API_ROOT + route,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+                "User-Agent": "MoneyMaker-Bounty-Radar/0.1",
+                **({"Authorization": f"Bearer {self.token}"} if self.token else {}),
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=25) as response:
+                payload = json.load(response)
+        except urllib.error.HTTPError as error:
+            response_body = error.read(2048).decode("utf-8", errors="replace")
+            raise GitHubError(f"GitHub returned HTTP {error.code}: {response_body}") from error
+        except (OSError, ValueError) as error:
+            raise GitHubError(f"Could not read open pull requests for {repository}: {error}") from error
+        if not isinstance(payload, list):
+            raise GitHubError(f"Expected a JSON list of pull requests for {repository}.")
+        self._pull_request_cache[repository] = [item for item in payload if isinstance(item, dict)]
+        return self._pull_request_cache[repository]
+
+
+def count_referencing_pull_requests(
+    issue: Mapping[str, Any], pull_requests: list[Mapping[str, Any]]
+) -> int:
+    """Count open PR bodies that directly mention the issue number or URL."""
+    number = int(issue["number"])
+    url = str(issue.get("html_url") or "")
+    number_pattern = re.compile(rf"(?<!\d)#{number}(?!\d)")
+    count = 0
+    for pull_request in pull_requests:
+        body = str(pull_request.get("body") or "")
+        if (url and url in body) or number_pattern.search(body):
+            count += 1
+    return count
 
 
 def parse_money(text: str) -> list[float]:
@@ -157,6 +201,7 @@ def assess(
     repository: Mapping[str, Any],
     config: Mapping[str, Any],
     *,
+    competing_pull_requests: int = 0,
     now: dt.datetime | None = None,
 ) -> Opportunity | None:
     """Reject closed, already-paid and prohibited work; score everything else."""
@@ -232,6 +277,11 @@ def assess(
     if issue.get("assignees"):
         warnings.append("The issue already has at least one assignee.")
         score -= 15
+    if competing_pull_requests:
+        warnings.append(
+            f"At least {competing_pull_requests} open pull request(s) directly reference this issue."
+        )
+        score -= min(35, competing_pull_requests * 5)
 
     evidence = sponsor_info.get("evidence") if trusted else None
     return Opportunity(
@@ -243,6 +293,7 @@ def assess(
         amount_source=amount_source,
         age_days=age_days,
         comments=comments,
+        competing_pull_requests=competing_pull_requests,
         score=max(0, min(100, score)),
         sponsor=owner,
         sponsor_evidence=str(evidence) if isinstance(evidence, str) else None,
@@ -285,7 +336,17 @@ def scan(
         try:
             fresh_issue = client.issue(repository_name, candidate["number"])
             repository = client.repository(repository_name)
-            opportunity = assess(fresh_issue, repository, config, now=now)
+            if repository.get("archived") or repository.get("disabled"):
+                continue
+            pull_requests = client.open_pull_requests(repository_name)
+            competition = count_referencing_pull_requests(fresh_issue, pull_requests)
+            opportunity = assess(
+                fresh_issue,
+                repository,
+                config,
+                competing_pull_requests=competition,
+                now=now,
+            )
         except (GitHubError, ValueError, TypeError, KeyError) as error:
             errors.append(f"Skipped {repository_name}#{candidate['number']}: {error}")
             continue
@@ -304,8 +365,8 @@ def render_markdown(opportunities: list[Opportunity], errors: list[str], *, gene
         "> Every amount below is an advertisement, not a payment guarantee. "
         "Each issue was fetched directly from GitHub and confirmed open at scan time.",
         "",
-        "| Score | Advertised | Issue | Age | Comments |",
-        "| ---: | ---: | --- | ---: | ---: |",
+        "| Score | Advertised | Issue | Age | Comments | Open PRs |",
+        "| ---: | ---: | --- | ---: | ---: | ---: |",
     ]
     for opportunity in opportunities:
         amount = f"${opportunity.advertised_usd:g}" if opportunity.advertised_usd is not None else "unknown"
@@ -313,10 +374,11 @@ def render_markdown(opportunities: list[Opportunity], errors: list[str], *, gene
         lines.append(
             f"| {opportunity.score}/100 | {amount} | "
             f"[{opportunity.repository}#{opportunity.issue_number}: {title}]({opportunity.url}) | "
-            f"{opportunity.age_days}d | {opportunity.comments} |"
+            f"{opportunity.age_days}d | {opportunity.comments} | "
+            f"{opportunity.competing_pull_requests} |"
         )
     if not opportunities:
-        lines.append("| — | — | No qualifying open bounties found. | — | — |")
+        lines.append("| — | — | No qualifying open bounties found. | — | — | — |")
 
     for opportunity in opportunities:
         if opportunity.warnings:
@@ -383,4 +445,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
