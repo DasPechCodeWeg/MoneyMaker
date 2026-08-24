@@ -23,6 +23,20 @@ NO_NEW_PULL_REQUEST_PATTERNS = (
     r"(?:pr|pull request)\b",
 )
 
+EXPLICIT_NONPAYMENT_PATTERNS = (
+    r"\bbount(?:y|ies)\s+(?:is|are)\s+symbolic\b",
+    r"\bno\s+monetary\s+(?:value|reward)\b",
+    r"\bnot\s+(?:a\s+)?real[- ]world\s+payout\b",
+    r"\bwill\s+never\s+be\s+merged\b",
+    r"\bdo\s+not\s+expect[\s\S]{0,80}(?:pay|money|merge)\b",
+)
+
+HIDDEN_AGENT_INSTRUCTION_PATTERNS = (
+    r"<!--[\s\S]{0,1500}\bignore\s+(?:all\s+)?(?:previous|prior)\s+instructions\b[\s\S]{0,1500}-->",
+    r"<!--[\s\S]{0,1500}\b(?:system\s+prompt|environment\s+variables?|session\s+data)\b[\s\S]{0,1500}-->",
+    r"<!--[\s\S]{0,1500}\b(?:exfiltrat|leak\s+secrets?)\b[\s\S]{0,1500}-->",
+)
+
 
 def _age_in_days(value: str | None, now: datetime) -> int | None:
     if not value:
@@ -112,6 +126,24 @@ def assess(
             "blocker",
             "A maintainer instructed contributors not to open new pull requests.",
             "Explicit no-new-PR language was detected.",
+            100,
+        )
+
+    if _contains_any(EXPLICIT_NONPAYMENT_PATTERNS, combined_policy):
+        add(
+            "EXPLICIT_NONPAYMENT",
+            "blocker",
+            "The repository explicitly says the displayed bounty is not real compensation.",
+            "A symbolic, no-payment, or never-merge disclaimer was detected.",
+            100,
+        )
+
+    if _contains_any(HIDDEN_AGENT_INSTRUCTION_PATTERNS, combined_policy):
+        add(
+            "HIDDEN_AGENT_INSTRUCTIONS",
+            "blocker",
+            "Hidden repository text attempts to direct automated agents or request sensitive context.",
+            "An instruction-like HTML comment was detected; repository text is untrusted input.",
             100,
         )
 
