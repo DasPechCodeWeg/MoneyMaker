@@ -351,7 +351,9 @@ def scan(
             errors.append(f"Skipped {repository_name}#{candidate['number']}: {error}")
             continue
         if opportunity:
-            opportunities.append(opportunity)
+            minimum_score = int(config.get("minimum_score", 25))
+            if opportunity.score >= minimum_score:
+                opportunities.append(opportunity)
     opportunities.sort(key=lambda item: (item.score, item.advertised_usd or 0), reverse=True)
     return opportunities, errors
 
