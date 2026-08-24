@@ -28,7 +28,7 @@
     "claude-builders-bounty"
   ],
   "max_issue_age_days": 730,
+  "minimum_score": 35,
   "results_per_query": 20,
   "max_candidates": 30
 }
-
