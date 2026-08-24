@@ -3,7 +3,15 @@ from __future__ import annotations
 import datetime as dt
 import unittest
 
-from moneymaker.radar import GitHubError, advertised_amount, assess, parse_money, render_markdown, scan
+from moneymaker.radar import (
+    GitHubError,
+    advertised_amount,
+    assess,
+    count_referencing_pull_requests,
+    parse_money,
+    render_markdown,
+    scan,
+)
 
 
 NOW = dt.datetime(2026, 8, 24, 12, 0, tzinfo=dt.timezone.utc)
@@ -65,6 +73,9 @@ class FakeClient:
     def repository(self, repository: str) -> dict[str, object]:
         return make_repository()
 
+    def open_pull_requests(self, repository: str) -> list[dict[str, object]]:
+        return []
+
 
 class RadarTests(unittest.TestCase):
     def test_parse_multiple_money_formats(self) -> None:
@@ -114,6 +125,23 @@ class RadarTests(unittest.TestCase):
         unknown = assess(make_issue(), make_repository(full_name="unknown/example"), CONFIG, now=NOW)
         self.assertGreater(trusted.score, unknown.score)
 
+    def test_directly_referencing_pull_requests_are_counted(self) -> None:
+        issue = make_issue()
+        pull_requests = [
+            {"body": "Fixes #42"},
+            {"body": "Alternative for https://github.com/tscircuit/example/issues/42"},
+            {"body": "Mentions #420, which is unrelated"},
+        ]
+        self.assertEqual(count_referencing_pull_requests(issue, pull_requests), 2)
+
+    def test_competing_pull_requests_reduce_score(self) -> None:
+        clear = assess(make_issue(), make_repository(), CONFIG, now=NOW)
+        crowded = assess(
+            make_issue(), make_repository(), CONFIG, competing_pull_requests=6, now=NOW
+        )
+        self.assertLess(crowded.score, clear.score)
+        self.assertEqual(crowded.competing_pull_requests, 6)
+
     def test_scan_deduplicates_and_refetches_original_issue(self) -> None:
         client = FakeClient(make_issue())
         opportunities, errors = scan(client, CONFIG, now=NOW, pause=lambda _: None)
@@ -139,4 +167,3 @@ class RadarTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
