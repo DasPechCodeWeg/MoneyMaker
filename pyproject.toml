@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moneymaker-bounty-radar"
+version = "0.1.0"
+description = "Evidence-first GitHub bounty discovery with scam and stale-listing checks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+bounty-radar = "moneymaker.radar:main"
+bountyproof = "bountyproof.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["moneymaker*", "bountyproof*"]
