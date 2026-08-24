@@ -1,54 +1,7 @@
 {
-  "generated_at": "2026-08-24T09:33:32+00:00",
+  "generated_at": "2026-08-24T09:35:10+00:00",
   "payment_disclaimer": "Advertised rewards are neither guaranteed nor received.",
-  "opportunity_count": 2,
+  "opportunity_count": 0,
   "errors": [],
-  "opportunities": [
-    {
-      "repository": "tscircuit/pcb-viewer",
-      "issue_number": 163,
-      "title": "Remove `disableAutoFocus` in favor of `focusOnHover={false}`",
-      "url": "https://github.com/tscircuit/pcb-viewer/issues/163",
-      "advertised_usd": 3.0,
-      "amount_source": "issue-body bounty command; verify platform amount",
-      "age_days": 554,
-      "comments": 50,
-      "competing_pull_requests": 36,
-      "score": 0,
-      "sponsor": "tscircuit",
-      "sponsor_evidence": "https://algora.io/tscircuit/bounties?status=completed",
-      "warnings": [
-        "The advertised amount is below $10.",
-        "Issue is older than one year; confirm sponsor interest.",
-        "Issue already has 50 comments; check competing claims.",
-        "Repository has an unusually high fork-to-star ratio.",
-        "At least 36 open pull request(s) directly reference this issue."
-      ],
-      "updated_at": "2026-08-22T16:16:05Z",
-      "payment_status": "advertised; not received or guaranteed"
-    },
-    {
-      "repository": "tscircuit/jlcsearch",
-      "issue_number": 92,
-      "title": "Add `is_extended_promotional ` column to components (from data source)",
-      "url": "https://github.com/tscircuit/jlcsearch/issues/92",
-      "advertised_usd": 1.0,
-      "amount_source": "current GitHub label",
-      "age_days": 320,
-      "comments": 131,
-      "competing_pull_requests": 82,
-      "score": 0,
-      "sponsor": "tscircuit",
-      "sponsor_evidence": "https://algora.io/tscircuit/bounties?status=completed",
-      "warnings": [
-        "Current label advertises $1, but the issue body mentions $75; the current label wins.",
-        "The advertised amount is below $10.",
-        "Issue is older than four months.",
-        "Issue already has 131 comments; check competing claims.",
-        "At least 82 open pull request(s) directly reference this issue."
-      ],
-      "updated_at": "2026-08-24T07:29:06Z",
-      "payment_status": "advertised; not received or guaranteed"
-    }
-  ]
+  "opportunities": []
 }
