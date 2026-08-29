@@ -1,6 +1,6 @@
 # Verified-open bounty radar
 
-Generated: 2026-08-29T06:18:11+00:00
+Generated: 2026-08-29T18:18:04+00:00
 
 > Every amount below is an advertisement, not a payment guarantee. Each issue was fetched directly from GitHub and confirmed open at scan time.
 
